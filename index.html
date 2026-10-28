@@ -1,0 +1,535 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Less Precise Can Be More Reliable: A Systematic Evaluation of Quantization's Impact on VLMs Beyond Accuracy</title>
+<meta name="description" content="ICML 2026. A large-scale evaluation of CLIP-family VLM quantization beyond accuracy: in specific regimes, quantization improves accuracy, calibration, OOD detection and noise robustness at once, by damping high-rank spectral components.">
+<meta name="author" content="Aymen Bouguerra, Daniel Montoya, Alexandra Gomez-Villa, Chokri Mraidha, Fabio Arnez">
+<meta name="color-scheme" content="light dark">
+<link rel="canonical" href="https://aymenbouguerra.github.io/Less-Precise-Can-Be-More-Reliable/">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Less Precise Can Be More Reliable: A Systematic Evaluation of Quantization's Impact on VLMs Beyond Accuracy">
+<meta property="og:description" content="ICML 2026. A large-scale evaluation of CLIP-family VLM quantization beyond accuracy: in specific regimes, quantization improves accuracy, calibration, OOD detection and noise robustness at once, by damping high-rank spectral components.">
+<meta property="og:url" content="https://aymenbouguerra.github.io/Less-Precise-Can-Be-More-Reliable/">
+<meta property="og:image" content="https://aymenbouguerra.github.io/Less-Precise-Can-Be-More-Reliable/assets/teaser.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="citation_title" content="Less Precise Can Be More Reliable: A Systematic Evaluation of Quantization's Impact on VLMs Beyond Accuracy">
+<meta name="citation_author" content="Bouguerra, Aymen">
+<meta name="citation_author" content="Montoya, Daniel">
+<meta name="citation_author" content="Gomez-Villa, Alexandra">
+<meta name="citation_author" content="Mraidha, Chokri">
+<meta name="citation_author" content="Arnez, Fabio">
+<meta name="citation_conference_title" content="International Conference on Machine Learning (ICML)">
+<meta name="citation_publication_date" content="2026">
+<meta name="citation_arxiv_id" content="2509.21173">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230f766e'/%3E%3Cpath d='M8 22 L14 14 L18 18 L24 9' stroke='white' stroke-width='3' fill='none' stroke-linecap='round'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script>
+  (function () {
+    try {
+      var t = localStorage.getItem("theme");
+      if (t === "light" || t === "dark") document.documentElement.setAttribute("data-theme", t);
+    } catch (e) {}
+  })();
+</script>
+<style>
+  :root {
+    --bg: #fafaf8;
+    --surface: #ffffff;
+    --surface-2: #f2f3f5;
+    --ink: #15171c;
+    --ink-2: #454b56;
+    --ink-3: #676e7a;
+    --line: #e2e4e8;
+    --line-strong: #cdd1d8;
+    --accent: #0f766e;
+    --accent-ink: #0d6158;
+    --accent-soft: #e2f2ef;
+    --good: #2e7d32;
+    --bad: #c62828;
+    --on-accent: #ffffff;
+    --window: #fff3c9;
+    --window-ink: #6f5400;
+    --plate: #ffffff;
+    --plate-line: #e2e4e8;
+    --shadow: 0 1px 2px rgba(16, 24, 40, 0.04), 0 2px 6px rgba(16, 24, 40, 0.05);
+    --radius: 14px;
+    --font: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0e1014;
+      --surface: #151920;
+      --surface-2: #1b2028;
+      --ink: #e7e9ed;
+      --ink-2: #b3b9c3;
+      --ink-3: #8c939f;
+      --line: #262c35;
+      --line-strong: #353c48;
+      --accent: #5eead4;
+      --accent-ink: #99f6e4;
+      --accent-soft: #11302c;
+      --good: #74c477;
+      --bad: #f07a72;
+      --on-accent: #04201d;
+      --window: #3a3114;
+      --window-ink: #ecca62;
+      --plate: #ffffff;
+      --plate-line: #2b313a;
+      --shadow: none;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0e1014;
+    --surface: #151920;
+    --surface-2: #1b2028;
+    --ink: #e7e9ed;
+    --ink-2: #b3b9c3;
+    --ink-3: #8c939f;
+    --line: #262c35;
+    --line-strong: #353c48;
+    --accent: #5eead4;
+    --accent-ink: #99f6e4;
+    --accent-soft: #11302c;
+    --good: #74c477;
+    --bad: #f07a72;
+    --on-accent: #04201d;
+    --window: #3a3114;
+    --window-ink: #ecca62;
+    --plate: #ffffff;
+    --plate-line: #2b313a;
+    --shadow: none;
+    color-scheme: dark;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  @media (prefers-reduced-motion: no-preference) { html { scroll-behavior: smooth; } }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font: 400 17px/1.65 var(--font);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    overflow-x: hidden;
+  }
+  img { max-width: 100%; }
+  a { color: var(--accent-ink); text-decoration-thickness: 1px; text-underline-offset: 3px; }
+  a:hover { text-decoration-thickness: 2px; }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 6px; }
+  em { font-style: italic; }
+  strong { font-weight: 600; color: var(--ink); }
+
+  .wrap { max-width: 1120px; margin: 0 auto; padding: 0 24px; }
+  .prose { max-width: 760px; margin-left: auto; margin-right: auto; }
+  @media (max-width: 640px) {
+    body { font-size: 16px; }
+    .wrap { padding: 0 16px; }
+  }
+
+  /* ---------- top bar ---------- */
+  .topbar {
+    position: sticky; top: 0; z-index: 20;
+    background: color-mix(in srgb, var(--bg) 86%, transparent);
+    -webkit-backdrop-filter: saturate(1.4) blur(10px);
+    backdrop-filter: saturate(1.4) blur(10px);
+    border-bottom: 1px solid var(--line);
+  }
+  .topbar-inner {
+    max-width: 1120px; margin: 0 auto; padding: 0 24px;
+    height: 56px; display: flex; align-items: center; gap: 16px;
+  }
+  .brand { font-weight: 700; font-size: 0.92rem; color: var(--ink); text-decoration: none; white-space: nowrap; letter-spacing: -0.005em; }
+  .brand span { color: var(--ink-3); font-weight: 500; }
+  .nav { display: flex; gap: 2px; overflow-x: auto; scrollbar-width: none; flex: 1; min-width: 0; justify-content: flex-end; }
+  .nav::-webkit-scrollbar { display: none; }
+  .nav a {
+    padding: 6px 10px; border-radius: 8px; font-size: 0.86rem; font-weight: 500;
+    color: var(--ink-2); text-decoration: none; white-space: nowrap;
+  }
+  .nav a:hover, .nav a.active { color: var(--ink); background: var(--surface-2); }
+  .theme-btn {
+    flex: none; width: 36px; height: 36px; border-radius: 9px; cursor: pointer;
+    border: 1px solid var(--line); background: var(--surface); color: var(--ink-2);
+    display: grid; place-items: center; padding: 0;
+  }
+  .theme-btn:hover { color: var(--ink); border-color: var(--line-strong); }
+  .theme-btn svg { width: 18px; height: 18px; }
+  .theme-btn .moon { display: none; }
+  :root[data-theme="dark"] .theme-btn .sun { display: none; }
+  :root[data-theme="dark"] .theme-btn .moon { display: block; }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) .theme-btn .sun { display: none; }
+    :root:not([data-theme="light"]) .theme-btn .moon { display: block; }
+  }
+  @media (max-width: 640px) {
+    .topbar-inner { padding: 0 16px; gap: 10px; }
+    .brand span { display: none; }
+    .nav { justify-content: flex-start; }
+  }
+
+  /* ---------- hero ---------- */
+  .hero { padding: 64px 0 8px; text-align: center; }
+  .venue {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 5px 12px; border-radius: 999px;
+    border: 1px solid var(--line-strong); background: var(--surface);
+    font-size: 0.8rem; font-weight: 600; letter-spacing: 0.02em; color: var(--ink-2);
+  }
+  .venue i { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); display: inline-block; }
+  h1 {
+    font-size: clamp(1.9rem, 4vw, 2.75rem); line-height: 1.14; letter-spacing: -0.026em;
+    font-weight: 700; margin: 22px auto 22px; max-width: 1000px; text-wrap: balance;
+  }
+  @media (max-width: 760px) { .br-wide { display: none; } }
+  .authors {
+    display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 22px;
+    margin: 0; padding: 0; list-style: none; font-size: 1.1rem; font-weight: 500;
+  }
+  .affil { margin: 10px 0 0; color: var(--ink-2); font-size: 1rem; }
+  .actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 30px; }
+  .btn {
+    display: inline-flex; align-items: center; gap: 9px;
+    min-height: 44px; padding: 0 18px; border-radius: 999px;
+    border: 1px solid var(--line-strong); background: var(--surface); color: var(--ink);
+    font-weight: 600; font-size: 0.95rem; text-decoration: none; line-height: 1.2;
+    transition: border-color .15s, background-color .15s;
+  }
+  .btn:hover { border-color: var(--ink-3); text-decoration: none; }
+  .btn svg { width: 18px; height: 18px; flex: none; }
+  .btn .tag {
+    font-size: 0.72rem; font-weight: 600; padding: 3px 8px; border-radius: 999px;
+    background: var(--surface-2); color: var(--ink-2);
+  }
+  .btn-primary { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+  .btn-primary:hover { border-color: var(--accent); filter: brightness(1.06); }
+  .btn-primary .tag { background: color-mix(in srgb, var(--on-accent) 18%, transparent); color: var(--on-accent); }
+  .btn[aria-disabled="true"] { color: var(--ink-3); border-style: dashed; cursor: default; }
+  .btn[aria-disabled="true"]:hover { border-color: var(--line-strong); }
+
+  /* ---------- overview ---------- */
+  .overview {
+    display: grid; grid-template-columns: minmax(0, 430px) minmax(0, 1fr);
+    gap: 48px; align-items: center; margin-top: 56px;
+  }
+  .overview figure { margin: 0; }
+  .label {
+    display: inline-block; font-size: 0.76rem; font-weight: 700; letter-spacing: 0.08em;
+    text-transform: uppercase; color: var(--accent-ink);
+  }
+  .tldr p { font-size: 1.14rem; line-height: 1.6; margin: 8px 0 0; color: var(--ink); }
+  .stats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 28px; }
+  .stat { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px 15px; }
+  .stat-value { font-size: clamp(1.55rem, 3vw, 2.05rem); font-weight: 600; letter-spacing: -0.02em; line-height: 1.1; }
+  .stat-label { font-size: 0.92rem; font-weight: 600; margin-top: 8px; line-height: 1.35; }
+  .stat-note { font-size: 0.84rem; color: var(--ink-3); margin-top: 3px; line-height: 1.4; }
+  @media (max-width: 900px) {
+    .overview { grid-template-columns: minmax(0, 1fr); gap: 32px; }
+    .overview figure { max-width: 460px; margin: 0 auto; }
+  }
+
+  /* ---------- sections ---------- */
+  section { padding-top: 64px; scroll-margin-top: 64px; }
+  .sec-head { margin-bottom: 18px; }
+  h2 {
+    font-size: clamp(1.5rem, 2.7vw, 2rem); line-height: 1.2; letter-spacing: -0.018em;
+    font-weight: 700; margin: 8px 0 0; text-wrap: balance;
+  }
+  h3 { font-size: 1.05rem; line-height: 1.35; font-weight: 600; margin: 0 0 6px; letter-spacing: -0.005em; }
+  p { margin: 0 0 1em; }
+  .lead { font-size: 1.08rem; color: var(--ink-2); }
+  .abstract p { color: var(--ink); text-align: left; }
+
+  figure { margin: 30px 0; }
+  .plate {
+    display: block; background: var(--plate); border: 1px solid var(--plate-line);
+    border-radius: var(--radius); padding: clamp(10px, 2vw, 22px); box-shadow: var(--shadow);
+  }
+  .plate img { display: block; width: 100%; height: auto; }
+  .fig-plot .plate { max-width: 960px; margin-left: auto; margin-right: auto; }
+  @media (max-width: 640px) {
+    .fig-wide .plate { overflow-x: auto; overscroll-behavior-x: contain; }
+    .fig-wide .plate img { min-width: 640px; }
+    .fig-wide figcaption::before { content: "Swipe the figure sideways to see every panel."; display: block; font-size: 0.8rem; color: var(--ink-3); margin-bottom: 6px; }
+  }
+  figcaption { max-width: 760px; margin: 14px auto 0; font-size: 0.92rem; color: var(--ink-2); line-height: 1.55; }
+  figcaption b { color: var(--ink); font-weight: 600; }
+
+  .cards { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; margin-top: 26px; }
+  .card { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 18px 18px 16px; }
+  .card p { font-size: 0.92rem; color: var(--ink-2); margin: 0; line-height: 1.55; }
+  .card .k { display: block; font-size: 0.74rem; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase; color: var(--ink-3); margin-bottom: 8px; }
+  @media (max-width: 960px) { .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  @media (max-width: 560px) { .cards { grid-template-columns: minmax(0, 1fr); } }
+
+  .note {
+    background: var(--surface); border: 1px solid var(--line); border-left: 3px solid var(--accent);
+    border-radius: 12px; padding: 18px 22px; margin-top: 26px; margin-bottom: 26px;
+  }
+  .note h3 { margin-bottom: 8px; }
+  .note ul { margin: 0; padding-left: 1.1em; }
+  .note li { margin: 6px 0; color: var(--ink-2); font-size: 0.95rem; }
+  .note li strong { color: var(--ink); }
+
+  .checks { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin: 22px 0 8px; }
+  .check { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; }
+  .check-top { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin-bottom: 6px; }
+  .check-top h3 { margin: 0; }
+  .verdict {
+    flex: none; font-size: 0.72rem; font-weight: 600; padding: 3px 9px; border-radius: 999px;
+    border: 1px solid var(--line-strong); color: var(--ink-2); white-space: nowrap;
+  }
+  .check p { font-size: 0.92rem; color: var(--ink-2); margin: 0; line-height: 1.55; }
+  @media (max-width: 720px) { .checks { grid-template-columns: minmax(0, 1fr); } }
+
+  .table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); margin-top: 22px; }
+  table { border-collapse: collapse; width: 100%; font-size: 0.92rem; }
+  th, td { padding: 10px 14px; text-align: right; white-space: nowrap; border-bottom: 1px solid var(--line); }
+  th:first-child, td:first-child, th.l, td.l { text-align: left; }
+  thead th { font-weight: 600; font-size: 0.8rem; color: var(--ink-2); background: var(--surface-2); letter-spacing: 0.01em; }
+  tbody tr:last-child td { border-bottom: 0; }
+  td { font-variant-numeric: tabular-nums; }
+  td.muted { color: var(--ink-3); }
+  tr.win td { background: var(--window); }
+  .win-key { display: inline-block; width: 12px; height: 12px; border-radius: 3px; background: var(--window); border: 1px solid var(--line-strong); vertical-align: -1px; margin-right: 4px; }
+  .table-note { font-size: 0.86rem; color: var(--ink-3); margin: 10px 0 0; line-height: 1.5; }
+  .two-col { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 36px; align-items: start; }
+  @media (max-width: 900px) { .two-col { grid-template-columns: minmax(0, 1fr); gap: 8px; } }
+
+  details.more { margin-top: 18px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); }
+  details.more summary {
+    cursor: pointer; padding: 14px 18px; font-weight: 600; font-size: 0.95rem; list-style: none;
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  }
+  details.more summary::-webkit-details-marker { display: none; }
+  details.more summary::after { content: "+"; font-size: 1.2rem; font-weight: 500; color: var(--ink-3); }
+  details.more[open] summary::after { content: "\2212"; }
+  details.more .inner { padding: 0 18px 18px; }
+  details.more figure { margin: 4px 0 0; }
+
+  .code-card {
+    display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 18px 28px;
+    background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 24px 26px;
+    margin-top: 22px;
+  }
+  .code-card .repo { font-family: var(--mono); font-size: 0.92rem; font-weight: 500; overflow-wrap: anywhere; color: var(--ink); }
+  .code-card .status { display: inline-flex; align-items: center; gap: 8px; margin-top: 8px; font-size: 0.9rem; color: var(--ink-2); }
+  .code-card .status i { width: 8px; height: 8px; border-radius: 50%; background: var(--window-ink); display: inline-block; flex: none; }
+  .code-card .main { min-width: 0; flex: 1 1 360px; }
+
+  .bib { position: relative; margin-top: 22px; }
+  .bib pre {
+    margin: 0; padding: 20px 22px; overflow-x: auto;
+    background: var(--surface); border: 1px solid var(--line); border-radius: 12px;
+    font: 400 0.84rem/1.65 var(--mono); color: var(--ink);
+    white-space: pre-wrap; overflow-wrap: anywhere;
+  }
+  @media (min-width: 1000px) { .bib { margin-left: -80px; margin-right: -80px; } }
+  @media (max-width: 640px) { .bib pre { padding-top: 54px; } }
+  .copy-btn {
+    position: absolute; top: 10px; right: 10px;
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 6px 11px; border-radius: 8px; cursor: pointer;
+    border: 1px solid var(--line-strong); background: var(--surface-2); color: var(--ink-2);
+    font: 600 0.8rem var(--font);
+  }
+  .copy-btn:hover { color: var(--ink); }
+  .copy-btn svg { width: 14px; height: 14px; }
+
+  .related {
+    display: block; margin-top: 18px; padding: 18px 22px; border-radius: 12px;
+    background: var(--surface); border: 1px solid var(--line); text-decoration: none; color: var(--ink);
+  }
+  .related:hover { border-color: var(--line-strong); }
+  .related .t { font-weight: 600; line-height: 1.4; }
+  .related .a { font-size: 0.92rem; color: var(--ink-2); margin-top: 4px; }
+  .related .a b { color: var(--ink); font-weight: 600; }
+  .related .m { font-size: 0.88rem; color: var(--ink-3); margin-top: 4px; }
+
+  footer { margin-top: 96px; border-top: 1px solid var(--line); padding: 36px 0 56px; font-size: 0.84rem; color: var(--ink-3); line-height: 1.6; }
+  footer p { max-width: 860px; }
+  footer .ieee { color: var(--ink-2); }
+
+  /* ---------- this page ---------- */
+  .overview-wide { margin-top: 52px; }
+  .overview-wide figure { margin: 0; }
+  .overview-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr); gap: 40px; align-items: start; margin-top: 36px; }
+  @media (max-width: 900px) { .overview-row { grid-template-columns: minmax(0, 1fr); gap: 24px; } }
+  .good { color: var(--good); font-weight: 600; }
+  .bad { color: var(--bad); font-weight: 600; }
+  td.best { font-weight: 700; color: var(--ink); }
+  tr.sub td { background: var(--surface-2); font-weight: 600; color: var(--ink-2); text-align: left; font-size: 0.82rem; letter-spacing: 0.01em; }
+  .fig-side { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 300px); gap: 36px; align-items: center; }
+  .fig-side figure { margin: 0; }
+  @media (max-width: 860px) { .fig-side { grid-template-columns: minmax(0, 1fr); } .fig-side figure { max-width: 340px; margin: 0 auto; } }
+  .tiers-key { display: flex; flex-wrap: wrap; gap: 8px 18px; margin: 14px 0 0; font-size: 0.9rem; color: var(--ink-2); }
+  td.pos, .pos { color: var(--good); font-weight: 600; }
+  td.best { font-weight: 700; }
+  th[rowspan], th[colspan] { vertical-align: bottom; }
+  th[colspan] { text-align: center; }
+</style>
+</head>
+
+<body id="top">
+
+<header class="topbar">
+  <div class="topbar-inner">
+    <a class="brand" href="#top">ICML 2026 <span>· Less Precise, More Reliable</span></a>
+    <nav class="nav" aria-label="Sections">
+      <a href="#abstract">Abstract</a>
+      <a href="#findings">Findings</a>
+      <a href="#citation">Citation</a>
+    </nav>
+    <button class="theme-btn" id="theme-btn" type="button" aria-label="Toggle dark mode" title="Toggle dark mode">
+      <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+      <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+    </button>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <div class="hero">
+    <span class="venue"><i aria-hidden="true"></i>ICML 2026</span>
+    <h1>Less Precise Can Be More Reliable:<br class="br-wide"> A Systematic Evaluation of Quantization's Impact on VLMs Beyond Accuracy</h1>
+    <ul class="authors" aria-label="Authors">
+      <li>Aymen Bouguerra<sup>1</sup></li>
+      <li>Daniel Montoya<sup>1</sup></li>
+      <li>Alexandra Gomez-Villa<sup>2</sup></li>
+      <li>Chokri Mraidha<sup>1</sup></li>
+      <li>Fabio Arnez<sup>1</sup></li>
+    </ul>
+    <p class="affil"><sup>1</sup>Université Paris-Saclay, CEA-List &nbsp;·&nbsp; <sup>2</sup>Computer Vision Center, Barcelona</p>
+    <div class="actions">
+      <a class="btn btn-primary" href="https://arxiv.org/abs/2509.21173" target="_blank" rel="noopener noreferrer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h5"/></svg> Paper <span class="tag">arXiv</span></a>
+      <span class="btn" aria-disabled="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></svg> Code <span class="tag">coming soon</span></span>
+      <a class="btn" href="#citation"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3H7a2 2 0 0 0-2 2v5a2 2 0 0 1-2 2 2 2 0 0 1 2 2v5c0 1.1.9 2 2 2h1M16 21h1a2 2 0 0 0 2-2v-5c0-1.1.9-2 2-2a2 2 0 0 1-2-2V5a2 2 0 0 0-2-2h-1"/></svg> BibTeX</a>
+    </div>
+  </div>
+
+  <div class="overview-wide" id="overview">
+    <figure class="fig-wide">
+      <a class="plate" href="assets/teaser.jpg" target="_blank" rel="noopener noreferrer">
+        <img src="assets/teaser.jpg" width="975" height="615"
+             alt="Scatter of 20,160 W8A8 quantized evaluation runs: relative ECE change against relative accuracy change versus the FP32 baseline. 8.5% of runs improve both accuracy and calibration, 31.3% improve calibration at worse accuracy, 8.0% improve accuracy at worse calibration, 52.2% degrade both.">
+      </a>
+      <figcaption><b>Quantization is not systematically destructive.</b> A sweep of 20,160 W8A8 quantized evaluation runs, each relative to its FP32 baseline (log scales). Nearly 40% of runs improve calibration (lower ECE), and 8.5% improve zero-shot accuracy and calibration at the same time.</figcaption>
+    </figure>
+  </div>
+
+  <section id="abstract" class="prose abstract">
+    <div class="sec-head"><span class="label">Abstract</span></div>
+    <p>Vision-Language Models (VLMs) such as CLIP have revolutionized zero-shot classification and safety-critical tasks, including Out-of-Distribution (OOD) detection. However, their high computational cost hinders efficient real-world deployment. While quantization is a standard solution for efficiency, its broader impact on reliability metrics beyond simple Top-1 accuracy remains critically under-explored. In this study, we conduct a large-scale evaluation of VLM quantization across a comprehensive experimental suite of over 700k evaluation runs with varying configurations. We find that, contrary to the assumption that quantization's noise degrades performance, it can simultaneously improve accuracy, calibration, OOD detection, and robustness to noise, though not to covariate shift or spurious correlations. We leverage these counterintuitive findings to characterize the mechanics of quantization beyond simple regularization: we show that quantization dampens high-rank spectral components, compelling the model to rely more heavily on robust, low-rank features. Ultimately, this spectral filtering effect drives the observed improvements in generalization and noise tolerance, establishing a pathway to deploy faster, more reliable VLMs by utilizing quantization beyond its conventional role.</p>
+  </section>
+
+  <section id="findings" class="prose">
+    <div class="sec-head"><span class="label">Findings</span><h2>What quantization does to a VLM's reliability</h2></div>
+    <ul>
+      <li><b>Over 700k evaluation runs</b> across CLIP-family models, quantization methods and bit-widths, scored on accuracy, calibration, OOD detection and robustness.</li>
+      <li><b>Quantization can help reliability.</b> In specific regimes it improves accuracy, calibration, OOD detection and robustness to noise at the same time.</li>
+      <li><b>But not everything.</b> It does not improve robustness to covariate shift or reliance on spurious correlations.</li>
+      <li><b>Why: spectral filtering.</b> Quantization dampens the high-rank spectral components of the features, so the model leans on robust low-rank directions.</li>
+    </ul>
+  </section>
+
+  <section id="citation" class="prose">
+    <div class="sec-head"><span class="label">Citation</span><h2>BibTeX</h2></div>
+    <div class="bib">
+      <pre id="bibtex">@inproceedings{bouguerra2026lessprecise,
+  title     = {Less Precise Can Be More Reliable: A Systematic Evaluation
+               of Quantization's Impact on {VLMs} Beyond Accuracy},
+  author    = {Bouguerra, Aymen and Montoya, Daniel and Gomez-Villa, Alexandra
+               and Mraidha, Chokri and Arnez, Fabio},
+  booktitle = {International Conference on Machine Learning (ICML)},
+  year      = {2026}
+}</pre>
+      <button class="copy-btn" id="copy-btn" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg><span>Copy</span></button>
+    </div>
+
+    <h3 style="margin-top: 40px;">Related work</h3>
+    <a class="related" href="https://aymenbouguerra.github.io/Disentangling-the-Good-From-the-Bad-Quantization-Induced-Flips-Are-Not-Random/" target="_blank" rel="noopener noreferrer">
+      <div class="t">Disentangling the Good From the Bad: Quantization-Induced Flips Are Not Random</div>
+      <div class="a"><b>Aymen Bouguerra</b>, Fabio Arnez, Alexandra Gomez-Villa, Chokri Mraidha</div>
+      <div class="m">NeurIPS 2026 · uses this spectral view to separate good from bad prediction flips</div>
+    </a>
+  </section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <p>The abstract and figure on this page are taken from the paper.</p>
+    <p>Université Paris-Saclay, CEA-List, F-91120 Palaiseau, France · Computer Vision Center, Barcelona, Spain.</p>
+  </div>
+</footer>
+
+<script>
+  (function () {
+    var root = document.documentElement;
+
+    // Theme toggle: follows the system until the visitor picks one.
+    var themeBtn = document.getElementById("theme-btn");
+    function currentTheme() {
+      var t = root.getAttribute("data-theme");
+      if (t) return t;
+      return window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    }
+    themeBtn.addEventListener("click", function () {
+      var next = currentTheme() === "dark" ? "light" : "dark";
+      root.setAttribute("data-theme", next);
+      try { localStorage.setItem("theme", next); } catch (e) {}
+    });
+
+    // Copy BibTeX (one button per block).
+    Array.prototype.forEach.call(document.querySelectorAll(".bib"), function (bib) {
+      var copyBtn = bib.querySelector(".copy-btn");
+      var label = copyBtn.querySelector("span");
+      copyBtn.addEventListener("click", function () {
+        var text = bib.querySelector("pre").textContent;
+        function done(ok) {
+          label.textContent = ok ? "Copied" : "Select and copy";
+          setTimeout(function () { label.textContent = "Copy"; }, 1800);
+        }
+        if (navigator.clipboard && window.isSecureContext) {
+          navigator.clipboard.writeText(text).then(function () { done(true); }, function () { done(false); });
+        } else {
+          var ta = document.createElement("textarea");
+          ta.value = text; ta.setAttribute("readonly", ""); ta.style.position = "fixed"; ta.style.opacity = "0";
+          document.body.appendChild(ta); ta.select();
+          var ok = false;
+          try { ok = document.execCommand("copy"); } catch (e) {}
+          document.body.removeChild(ta);
+          done(ok);
+        }
+      });
+    });
+
+    // Highlight the section in view.
+    var links = Array.prototype.slice.call(document.querySelectorAll(".nav a"));
+    if ("IntersectionObserver" in window) {
+      var byId = {};
+      links.forEach(function (a) { byId[a.getAttribute("href").slice(1)] = a; });
+      var obs = new IntersectionObserver(function (entries) {
+        entries.forEach(function (e) {
+          if (!e.isIntersecting) return;
+          links.forEach(function (a) { a.classList.remove("active"); });
+          var a = byId[e.target.id];
+          if (a) a.classList.add("active");
+        });
+      }, { rootMargin: "-45% 0px -50% 0px" });
+      Object.keys(byId).forEach(function (id) {
+        var el = document.getElementById(id);
+        if (el) obs.observe(el);
+      });
+    }
+  })();
+</script>
+</body>
+</html>
