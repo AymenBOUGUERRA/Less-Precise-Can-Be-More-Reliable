@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Less Precise Can Be More Reliable: A Systematic Evaluation of Quantization's Impact on VLMs Beyond Accuracy</title>
 <meta name="description" content="ICML 2026. A large-scale evaluation of CLIP-family VLM quantization beyond accuracy: in specific regimes, quantization improves accuracy, calibration, OOD detection and noise robustness at once, by damping high-rank spectral components.">
-<meta name="author" content="Aymen Bouguerra, Daniel Montoya, Alexandra Gomez-Villa, Chokri Mraidha, Fabio Arnez">
+<meta name="author" content="Aymen Bouguerra, Daniel Alfonso Montoya Vasquez, Alexandra Gomez-Villa, Chokri Mraidha, Fabio Arnez">
 <meta name="color-scheme" content="light dark">
 <link rel="canonical" href="https://aymenbouguerra.github.io/Less-Precise-Can-Be-More-Reliable/">
 <meta property="og:type" content="website">
@@ -16,13 +16,15 @@
 <meta name="twitter:card" content="summary_large_image">
 <meta name="citation_title" content="Less Precise Can Be More Reliable: A Systematic Evaluation of Quantization's Impact on VLMs Beyond Accuracy">
 <meta name="citation_author" content="Bouguerra, Aymen">
-<meta name="citation_author" content="Montoya, Daniel">
+<meta name="citation_author" content="Montoya Vasquez, Daniel Alfonso">
 <meta name="citation_author" content="Gomez-Villa, Alexandra">
 <meta name="citation_author" content="Mraidha, Chokri">
 <meta name="citation_author" content="Arnez, Fabio">
 <meta name="citation_conference_title" content="International Conference on Machine Learning (ICML)">
 <meta name="citation_publication_date" content="2026">
-<meta name="citation_arxiv_id" content="2509.21173">
+<meta name="citation_volume" content="306">
+<meta name="citation_firstpage" content="9363">
+<meta name="citation_lastpage" content="9391">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230f766e'/%3E%3Cpath d='M8 22 L14 14 L18 18 L24 9' stroke='white' stroke-width='3' fill='none' stroke-linecap='round'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -381,7 +383,7 @@
 
 <header class="topbar">
   <div class="topbar-inner">
-    <a class="brand" href="#top">ICML 2026 <span>· Less Precise, More Reliable</span></a>
+    <a class="brand" href="#top">ICML 2026</a>
     <nav class="nav" aria-label="Sections">
       <a href="#abstract">Abstract</a>
       <a href="#findings">Findings</a>
@@ -401,15 +403,15 @@
     <h1>Less Precise Can Be More Reliable:<br class="br-wide"> A Systematic Evaluation of Quantization's Impact on VLMs Beyond Accuracy</h1>
     <ul class="authors" aria-label="Authors">
       <li>Aymen Bouguerra<sup>1</sup></li>
-      <li>Daniel Montoya<sup>1</sup></li>
+      <li>Daniel Alfonso Montoya Vasquez<sup>1</sup></li>
       <li>Alexandra Gomez-Villa<sup>2</sup></li>
       <li>Chokri Mraidha<sup>1</sup></li>
       <li>Fabio Arnez<sup>1</sup></li>
     </ul>
     <p class="affil"><sup>1</sup>Université Paris-Saclay, CEA-List &nbsp;·&nbsp; <sup>2</sup>Computer Vision Center, Barcelona</p>
     <div class="actions">
-      <a class="btn btn-primary" href="https://arxiv.org/abs/2509.21173" target="_blank" rel="noopener noreferrer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h5"/></svg> Paper <span class="tag">arXiv</span></a>
-      <span class="btn" aria-disabled="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></svg> Code <span class="tag">coming soon</span></span>
+      <a class="btn btn-primary" href="https://proceedings.mlr.press/v306/bouguerra26a.html" target="_blank" rel="noopener noreferrer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h5"/></svg> Paper <span class="tag">PMLR</span></a>
+      <a class="btn" href="https://github.com/CEA-LIST/less-precise-more-reliable-vlms" target="_blank" rel="noopener noreferrer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></svg> Code <span class="tag">CEA-List</span></a>
       <a class="btn" href="#citation"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3H7a2 2 0 0 0-2 2v5a2 2 0 0 1-2 2 2 2 0 0 1 2 2v5c0 1.1.9 2 2 2h1M16 21h1a2 2 0 0 0 2-2v-5c0-1.1.9-2 2-2a2 2 0 0 1-2-2V5a2 2 0 0 0-2-2h-1"/></svg> BibTeX</a>
     </div>
   </div>
@@ -442,13 +444,18 @@
   <section id="citation" class="prose">
     <div class="sec-head"><span class="label">Citation</span><h2>BibTeX</h2></div>
     <div class="bib">
-      <pre id="bibtex">@inproceedings{bouguerra2026lessprecise,
+      <pre id="bibtex">@inproceedings{bouguerra26a,
   title     = {Less Precise Can Be More Reliable: A Systematic Evaluation
                of Quantization's Impact on {VLMs} Beyond Accuracy},
-  author    = {Bouguerra, Aymen and Montoya, Daniel and Gomez-Villa, Alexandra
+  author    = {Bouguerra, Aymen and Montoya Vasquez, Daniel Alfonso and Gomez-Villa, Alexandra
                and Mraidha, Chokri and Arnez, Fabio},
-  booktitle = {International Conference on Machine Learning (ICML)},
-  year      = {2026}
+  booktitle = {Proceedings of the 43rd International Conference on Machine Learning},
+  pages     = {9363--9391},
+  year      = {2026},
+  volume    = {306},
+  series    = {Proceedings of Machine Learning Research},
+  publisher = {PMLR},
+  url       = {https://proceedings.mlr.press/v306/bouguerra26a.html}
 }</pre>
       <button class="copy-btn" id="copy-btn" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg><span>Copy</span></button>
     </div>
@@ -459,6 +466,37 @@
       <div class="a"><b>Aymen Bouguerra</b>, Fabio Arnez, Alexandra Gomez-Villa, Chokri Mraidha</div>
       <div class="m">NeurIPS 2026 · uses this spectral view to separate good from bad prediction flips</div>
     </a>
+    <div class="bib">
+      <pre>@inproceedings{bouguerra2026disentangling,
+  title     = {Disentangling the Good From the Bad: Quantization-Induced Flips Are Not Random},
+  author    = {Bouguerra, Aymen and Arnez, Fabio and Gomez-Villa, Alexandra and Mraidha, Chokri},
+  booktitle = {Advances in Neural Information Processing Systems (NeurIPS)},
+  year      = {2026}
+}</pre>
+      <button class="copy-btn" type="button">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+
+    <a class="related" href="https://aymenbouguerra.github.io/Quantization-and-Corruption-Robustness-in-Deployed-Road-Scene-Perception/" target="_blank" rel="noopener noreferrer" style="margin-top: 24px;">
+      <div class="t">Quantization and Corruption Robustness in Deployed Road-Scene Perception</div>
+      <div class="a"><b>Aymen Bouguerra</b>, Ansgar Radermacher, Fabio Arnez, Chokri Mraidha</div>
+      <div class="m">IEEE ICVES 2026 · quantization and corruption robustness in a deployed road-scene detector</div>
+    </a>
+    <div class="bib">
+      <pre>@inproceedings{bouguerra2026perception,
+  title     = {Quantization and Corruption Robustness in Deployed Road-Scene Perception},
+  author    = {Bouguerra, Aymen and Radermacher, Ansgar and Arnez, Fabio and Mraidha, Chokri},
+  booktitle = {IEEE International Conference on Vehicular Electronics and Safety (ICVES)},
+  address   = {Cochabamba, Bolivia},
+  year      = {2026}
+}</pre>
+      <button class="copy-btn" type="button">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+        <span>Copy</span>
+      </button>
+    </div>
   </section>
 
 </main>
